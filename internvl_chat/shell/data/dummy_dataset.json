@@ -1,7 +1,7 @@
 {
   "dummy_examples": {
-    "root": "internvl_chat/examples/",
-    "annotation": "internvl_chat/shell/data/dummy_dataset.jsonl",
+    "root": "/home/paperspace/Developer/InternVL/internvl_chat/examples/",
+    "annotation": "/home/paperspace/Developer/InternVL/internvl_chat/shell/data/dummy_dataset.jsonl",
     "data_augment": false,
     "max_dynamic_patch": 12,
     "repeat_time": 1,
