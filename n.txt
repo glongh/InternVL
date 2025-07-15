@@ -1,0 +1,2 @@
+wget https://storage.googleapis.com/research-sub/checkpoint-10200/added_tokens.json
+wget -c -O model.safetensors https://storage.googleapis.com/research-sub/checkpoint-10200/model.safetensors

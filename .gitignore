@@ -7,7 +7,7 @@ __pycache__/
 *.so
 
 pretrained/
-
+internvl_chat/OpensatMap-demo/
 # Distribution / packaging
 .Python
 build/

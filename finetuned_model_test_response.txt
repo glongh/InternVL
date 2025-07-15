@@ -1,0 +1,61 @@
+FINE-TUNED MODEL TEST RESPONSE
+==================================================
+
+Base model: OpenGVLab/InternVL3-2B
+Checkpoint: /home/paperspace/Developer/InternVL/internvl_chat/work_dirs/internvl3_2b_lora_finetune
+Test image: /home/paperspace/Developer/InternVL/internvl_chat/examples/satmap/patch_0044_896_1152.png
+Prompt: <image>
+From this aerial image of an urban street scene, identify and trace all visible road markings, including lane dividers, lane boundaries, bike lanes. For each marking, output a polyline or a sequence of (x, y) pixel coordinates representing its shape. Only include visible markings painted on the road surface.
+
+Response:
+------------------------------
+From the aerial image of the urban street scene, the road markings visible include:
+
+1. **Lane Dividers**: 
+   - A yellow double line running parallel to the road's edge, dividing the lanes from each other.
+
+2. **Lane Boundaries**: 
+   - The edges of the lanes, which are not distinctly marked with lines but are defined by the pavement edges and the road surface.
+
+3. **Bike Lane**: 
+   - A green dashed line running parallel to the road, indicating a bike lane.
+
+Here are the pixel coordinates for the lane dividers, boundaries, and bike lane:
+
+### Lane Dividers
+- **Coordinates**: (50, 350) to (130, 370)
+- **Coordinates**: (150, 370) to (230, 390)
+- **Coordinates**: (250, 390) to (330, 410)
+- **Coordinates**: (350, 410) to (430, 430)
+- **Coordinates**: (450, 430) to (530, 450)
+- **Coordinates**: (550, 450) to (630, 470)
+- **Coordinates**: (650, 470) to (730, 490)
+- **Coordinates**: (750, 490) to (830, 510)
+- **Coordinates**: (850, 510) to (930, 530)
+- **Coordinates**: (950, 530) to (1030, 550)
+- **Coordinates**: (1050, 550) to (1130, 570)
+- **Coordinates**: (1150, 570) to (1230, 590)
+- **Coordinates**: (1250, 590) to (1330, 610)
+- **Coordinates**: (1350, 610) to (1430, 630)
+- **Coordinates**: (1450, 630) to (1530, 650)
+- **Coordinates**: (1550, 650) to (1630, 670)
+- **Coordinates**: (1650, 670) to (1730, 690)
+- **Coordinates**: (1750, 690) to (1830, 710)
+- **Coordinates**: (1850, 710) to (1930, 730)
+- **Coordinates**: (1950, 730) to (2030, 750)
+- **Coordinates**: (2050, 750) to (2130, 770)
+- **Coordinates**: (2150, 770) to (2230, 790)
+- **Coordinates**: (2250, 790) to (2330, 810)
+- **Coordinates**: (2350, 810) to (2430, 830)
+- **Coordinates**: (2450, 830) to (2530, 850)
+- **Coordinates**: (2550, 850) to (2630, 870)
+- **Coordinates**: (2650, 870) to (2730, 890)
+- **Coordinates**: (2750, 890) to (2830, 910)
+- **Coordinates**: (2850, 910) to (2930, 930)
+- **Coordinates**: (2950, 930) to (3030, 950)
+- **Coordinates**: (3050, 950) to (3130, 970)
+- **Coordinates**: (3150, 970) to (3230, 990)
+
+### Lane Boundaries
+- **Coordinates**: (50, 350) to (130, 370)
+- **Coordinates**: (150, 370) to (230, 390
