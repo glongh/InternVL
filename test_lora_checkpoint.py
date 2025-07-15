@@ -259,7 +259,11 @@ def test_lora_checkpoint():
     prompt = ("<image>\n"
               "From this aerial image of an urban street scene, identify and trace all visible road markings, "
               "including lane dividers, lane boundaries, bike lanes. For each marking, output a polyline or a sequence "
-              "of (x, y) pixel coordinates representing its shape. Only include visible markings painted on the road surface.")
+              "of (x, y) pixel coordinates representing its shape. Only include visible markings painted on the road surface.\n\n"
+              "Format your answers like in the following examples:\n"
+              "<line> <473> <21> <420> <149> <377> <267> <318> <407> <274> <512> </line>\n"
+              "<line> <351> <512> <367> <473> <407> <378> <446> <281> <489> <173> <512> <118> </line>\n"
+              "<line> <89> <156> <123> <189> <156> <223> <189> <256> <223> <290> </line>")
     
     print(f"\nPrompt: {prompt[:100]}...")
     

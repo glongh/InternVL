@@ -13,6 +13,7 @@ import torch
 import torchvision.transforms as T
 from torchvision.transforms.functional import InterpolationMode
 from transformers import AutoModel, AutoTokenizer
+from safetensors import safe_open
 
 # Image preprocessing functions
 IMAGENET_MEAN = (0.485, 0.456, 0.406)
@@ -128,11 +129,15 @@ def run_model_inference(model, tokenizer, image_path):
     # Load and preprocess image
     pixel_values = load_image(image_path, max_num=6).to(torch.bfloat16).cuda()  # Reduced max_num for memory
     
-    # Define the prompt
+    # Define the prompt with format examples
     prompt = ("<image>\n"
               "From this aerial image of an urban street scene, identify and trace all visible road markings, "
               "including lane dividers, lane boundaries, bike lanes. For each marking, output a polyline or a sequence "
-              "of (x, y) pixel coordinates representing its shape. Only include visible markings painted on the road surface.")
+              "of (x, y) pixel coordinates representing its shape. Only include visible markings painted on the road surface.\n\n"
+              "Format your answers like in the following examples:\n"
+              "<line> <473> <21> <420> <149> <377> <267> <318> <407> <274> <512> </line>\n"
+              "<line> <351> <512> <367> <473> <407> <378> <446> <281> <489> <173> <512> <118> </line>\n"
+              "<line> <89> <156> <123> <189> <156> <223> <189> <256> <223> <290> </line>")
     
     # Generation configuration
     generation_config = dict(
@@ -253,18 +258,34 @@ def main():
     os.makedirs(output_dir, exist_ok=True)
     
     # Load model and tokenizer - Force single GPU
-    model_path = "OpenGVLab/InternVL3-2B"
-    print(f"Loading model: {model_path}")
+    base_model_path = "OpenGVLab/InternVL3-2B"
+    checkpoint_path = "/home/paperspace/Developer/InternVL/internvl_chat/work_dirs/internvl3_2b_lora_finetune"
+    print(f"Loading base model: {base_model_path}")
+    print(f"Loading checkpoint: {checkpoint_path}")
     
     model = AutoModel.from_pretrained(
-        model_path,
+        base_model_path,
         torch_dtype=torch.bfloat16,
         low_cpu_mem_usage=True,
         trust_remote_code=True,
         device_map={"": 0}  # Force everything to GPU 0
     ).eval()
     
-    tokenizer = AutoTokenizer.from_pretrained(model_path, trust_remote_code=True, use_fast=False)
+    tokenizer = AutoTokenizer.from_pretrained(base_model_path, trust_remote_code=True, use_fast=False)
+    
+    # Load fine-tuned weights
+    safetensors_path = os.path.join(checkpoint_path, "model.safetensors")
+    if os.path.exists(safetensors_path):
+        print("Loading fine-tuned weights...")
+        state_dict = {}
+        with safe_open(safetensors_path, framework="pt", device="cpu") as f:
+            for key in f.keys():
+                state_dict[key] = f.get_tensor(key)
+        
+        model.load_state_dict(state_dict, strict=False)
+        print("✅ Fine-tuned weights loaded!")
+    else:
+        print("⚠️  No fine-tuned weights found, using base model")
     
     # Get all image files
     image_files = [f for f in os.listdir(satmap_dir) if f.endswith('.png')]

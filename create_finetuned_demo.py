@@ -9,6 +9,11 @@ import numpy as np
 import matplotlib.pyplot as plt
 import matplotlib.image as mpimg
 from PIL import Image
+import torch
+import torchvision.transforms as T
+from torchvision.transforms.functional import InterpolationMode
+from transformers import AutoModel, AutoTokenizer
+from safetensors import safe_open
 
 def convert_polylines_to_model_format(polylines):
     """Convert ground truth polylines to the model output format"""
@@ -51,6 +56,56 @@ def parse_model_predictions(response):
                 polylines.append(np.array(coords))
     
     return polylines
+
+def create_actual_demo_visualization(image_path, gt_polylines, pred_polylines, output_path):
+    """Create visualization comparing ground truth vs model predictions"""
+    
+    # Load image
+    img = mpimg.imread(image_path)
+    
+    # Create figure with three subplots
+    fig, (ax1, ax2, ax3) = plt.subplots(1, 3, figsize=(18, 6))
+    
+    # Original image
+    ax1.imshow(img)
+    ax1.set_title('Original Image', fontsize=14, fontweight='bold')
+    ax1.axis('off')
+    
+    # Ground truth
+    ax2.imshow(img)
+    ax2.set_title(f'Ground Truth ({len(gt_polylines)} polylines)', fontsize=14, fontweight='bold')
+    ax2.axis('off')
+    
+    # Draw ground truth polylines
+    for i, line in enumerate(gt_polylines):
+        if len(line) > 1:
+            color = plt.cm.Set1(i % 9)
+            ax2.plot(line[:, 0], line[:, 1], 
+                     color=color, 
+                     linewidth=2, 
+                     alpha=0.8,
+                     marker='o',
+                     markersize=1)
+    
+    # Model predictions
+    ax3.imshow(img)
+    ax3.set_title(f'Model Predictions ({len(pred_polylines)} polylines)', fontsize=14, fontweight='bold')
+    ax3.axis('off')
+    
+    # Draw predicted polylines
+    for i, line in enumerate(pred_polylines):
+        if len(line) > 1:
+            color = plt.cm.Set2(i % 8)
+            ax3.plot(line[:, 0], line[:, 1], 
+                     color=color, 
+                     linewidth=2, 
+                     alpha=0.8,
+                     marker='o',
+                     markersize=1)
+    
+    plt.tight_layout()
+    plt.savefig(output_path, dpi=200, bbox_inches='tight')
+    plt.close()
 
 def create_finetuned_demo_visualization(image_path, gt_polylines, output_path):
     """Create demo showing original, ground truth, and simulated fine-tuned output"""
@@ -105,8 +160,83 @@ def create_finetuned_demo_visualization(image_path, gt_polylines, output_path):
     
     return simulated_output
 
+def load_finetuned_model():
+    """Load the fine-tuned model"""
+    base_model_path = "OpenGVLab/InternVL3-2B"
+    checkpoint_path = "/home/paperspace/Developer/InternVL/internvl_chat/work_dirs/internvl3_2b_lora_finetune"
+    
+    print("Loading fine-tuned model...")
+    # Load base model
+    model = AutoModel.from_pretrained(
+        base_model_path,
+        torch_dtype=torch.bfloat16,
+        low_cpu_mem_usage=True,
+        trust_remote_code=True,
+        device_map={"": 0}
+    ).eval()
+    
+    tokenizer = AutoTokenizer.from_pretrained(base_model_path, trust_remote_code=True, use_fast=False)
+    
+    # Load fine-tuned weights
+    safetensors_path = os.path.join(checkpoint_path, "model.safetensors")
+    if os.path.exists(safetensors_path):
+        state_dict = {}
+        with safe_open(safetensors_path, framework="pt", device="cpu") as f:
+            for key in f.keys():
+                state_dict[key] = f.get_tensor(key)
+        
+        model.load_state_dict(state_dict, strict=False)
+        print("✅ Fine-tuned model loaded successfully!")
+    
+    return model, tokenizer
+
+def build_transform(input_size):
+    MEAN, STD = (0.485, 0.456, 0.406), (0.229, 0.224, 0.225)
+    transform = T.Compose([
+        T.Lambda(lambda img: img.convert('RGB') if img.mode != 'RGB' else img),
+        T.Resize((input_size, input_size), interpolation=InterpolationMode.BICUBIC),
+        T.ToTensor(),
+        T.Normalize(mean=MEAN, std=STD)
+    ])
+    return transform
+
+def load_image_simple(image_file, input_size=448):
+    """Simple image loading without dynamic preprocessing"""
+    image = Image.open(image_file).convert('RGB')
+    transform = build_transform(input_size=input_size)
+    pixel_values = transform(image).unsqueeze(0)
+    return pixel_values
+
+def get_actual_model_prediction(model, tokenizer, image_path):
+    """Get actual prediction from the fine-tuned model"""
+    
+    # Load and preprocess image
+    pixel_values = load_image_simple(image_path).to(torch.bfloat16).cuda()
+    
+    # Define prompt with format examples
+    prompt = ("<image>\n"
+              "From this aerial image of an urban street scene, identify and trace all visible road markings, "
+              "including lane dividers, lane boundaries, bike lanes. For each marking, output a polyline or a sequence "
+              "of (x, y) pixel coordinates representing its shape. Only include visible markings painted on the road surface.\n\n"
+              "Format your answers like in the following examples:\n"
+              "<line> <473> <21> <420> <149> <377> <267> <318> <407> <274> <512> </line>\n"
+              "<line> <351> <512> <367> <473> <407> <378> <446> <281> <489> <173> <512> <118> </line>\n"
+              "<line> <89> <156> <123> <189> <156> <223> <189> <256> <223> <290> </line>")
+    
+    # Generation configuration
+    generation_config = dict(
+        max_new_tokens=1024,
+        do_sample=True,
+        temperature=0.7,
+        top_p=0.95
+    )
+    
+    # Get model response
+    response = model.chat(tokenizer, pixel_values, prompt, generation_config)
+    return response
+
 def create_comparison_all_images():
-    """Create comparison for all images"""
+    """Create comparison for all images using actual fine-tuned model"""
     
     # Directory paths
     satmap_dir = "/home/paperspace/Developer/InternVL/internvl_chat/examples/satmap"
@@ -114,6 +244,9 @@ def create_comparison_all_images():
     
     # Create output directory
     os.makedirs(output_dir, exist_ok=True)
+    
+    # Load the fine-tuned model
+    model, tokenizer = load_finetuned_model()
     
     # Get all image files
     image_files = [f for f in os.listdir(satmap_dir) if f.endswith('.png')]
@@ -140,18 +273,26 @@ def create_comparison_all_images():
         
         print(f"  Ground truth: {len(gt_polylines)} polylines")
         
+        # Get actual model prediction
+        print("  🤖 Running model inference...")
+        actual_output = get_actual_model_prediction(model, tokenizer, image_path)
+        
+        # Parse model output
+        pred_polylines = parse_model_predictions(actual_output)
+        print(f"  📍 Model predicted: {len(pred_polylines)} polylines")
+        
         # Create demo visualization
         base_name = img_file.replace('.png', '')
         demo_path = os.path.join(output_dir, f"{base_name}_finetuned_demo.png")
         
-        simulated_output = create_finetuned_demo_visualization(image_path, gt_polylines, demo_path)
+        create_actual_demo_visualization(image_path, gt_polylines, pred_polylines, demo_path)
         
-        # Save simulated model output
-        output_path = os.path.join(output_dir, f"{base_name}_simulated_output.txt")
+        # Save actual model output
+        output_path = os.path.join(output_dir, f"{base_name}_model_output.txt")
         with open(output_path, 'w') as f:
-            f.write("SIMULATED FINE-TUNED MODEL OUTPUT:\n")
+            f.write("ACTUAL FINE-TUNED MODEL OUTPUT:\n")
             f.write("="*50 + "\n\n")
-            f.write(simulated_output)
+            f.write(actual_output)
         
         print(f"  ✅ Demo created: {demo_path}")
     

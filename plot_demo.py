@@ -9,9 +9,9 @@ import matplotlib.pyplot as plt
 import matplotlib.image as mpimg
 
 # Paths to demo files
-DEMO_DIR = "./internvl_chat/OpensatMap-demo/"
-IMAGE_PATH = DEMO_DIR + "roundabout5_-1_-1_sat.png"
-JSON_PATH = DEMO_DIR + "RA.json"
+DEMO_DIR = "./internvl_chat/examples/satmap/"
+IMAGE_PATH = DEMO_DIR + "patch_0044_896_1152.png"
+JSON_PATH = DEMO_DIR + "patch_0044_896_1152.json"
 
 # Read the image
 print(f"Loading image from: {IMAGE_PATH}")
@@ -23,14 +23,25 @@ print(f"Loading annotations from: {JSON_PATH}")
 with open(JSON_PATH, 'r') as f:
     json_data = json.load(f)
 
-# Get image name and metadata
-img_name = list(json_data.keys())[0]
-img_width = json_data[img_name]['image_width']
-img_height = json_data[img_name]['image_height']
-lines = json_data[img_name]['lines']
+# Handle different JSON formats
+if isinstance(json_data, dict) and len(json_data) == 1:
+    # Old format with image name as key
+    img_name = list(json_data.keys())[0]
+    img_width = json_data[img_name]['image_width']
+    img_height = json_data[img_name]['image_height']
+    lines = json_data[img_name]['lines']
+    print(f"Image: {img_name}")
+    print(f"Dimensions: {img_width}x{img_height}")
+elif isinstance(json_data, list):
+    # New format - direct list of polylines
+    lines = []
+    for line_coords in json_data:
+        lines.append({'points': line_coords})
+    img_width, img_height = img.shape[1], img.shape[0]
+    print(f"Image dimensions: {img_width}x{img_height}")
+else:
+    raise ValueError("Unsupported JSON format")
 
-print(f"Image: {img_name}")
-print(f"Dimensions: {img_width}x{img_height}")
 print(f"Number of line annotations: {len(lines)}")
 
 # Create visualization
@@ -63,12 +74,20 @@ line_style_map = {
 # Plot each line
 for i, line in enumerate(lines):
     # Extract points
-    points = np.array(line['points']).astype(np.int32)
+    if 'points' in line:
+        points = np.array(line['points']).astype(np.int32)
+    else:
+        points = np.array(line).astype(np.int32)
     
     # Get line properties
-    color_name = line.get('color', 'White')
-    line_type = line.get('line_type', 'Solid')
-    category = line.get('category', 'Lane line')
+    if isinstance(line, dict):
+        color_name = line.get('color', 'White')
+        line_type = line.get('line_type', 'Solid')
+        category = line.get('category', 'Lane line')
+    else:
+        color_name = 'White'
+        line_type = 'Solid'
+        category = 'Road marking'
     
     # Choose color
     if color_name in color_map:

@@ -32,22 +32,35 @@ def plot_road_markings(image_path, json_path, output_path=None, show_plot=True):
     # Display image
     ax.imshow(img)
     
-    # Get the image name from json_data keys
-    img_name = list(json_data.keys())[0]
+    # Handle different JSON formats
+    if isinstance(json_data, dict) and len(json_data) == 1:
+        # Old format with image name as key
+        img_name = list(json_data.keys())[0]
+        lines = json_data[img_name]['lines']
+    elif isinstance(json_data, list):
+        # New format - direct list of polylines
+        lines = []
+        for line_coords in json_data:
+            lines.append({'points': line_coords})
+    else:
+        raise ValueError("Unsupported JSON format")
     
     # Plot each line annotation
-    for i, line in enumerate(json_data[img_name]['lines']):
+    for i, line in enumerate(lines):
         # Extract points
-        points = np.array(line['points']).astype(np.int32)
+        if 'points' in line:
+            points = np.array(line['points']).astype(np.int32)
+        else:
+            points = np.array(line).astype(np.int32)
         
         # Choose color based on line properties
-        if line.get('color') == 'White':
+        if isinstance(line, dict) and line.get('color') == 'White':
             color = 'white'
-        elif line.get('color') == 'Yellow':
+        elif isinstance(line, dict) and line.get('color') == 'Yellow':
             color = 'yellow'
         else:
-            # Random color for visualization
-            color = (np.random.rand(), np.random.rand(), np.random.rand())
+            # Use colormap for visualization
+            color = plt.cm.Set1(i % 9)
         
         # Determine line style based on line_type
         if line.get('line_type') == 'Dashed':
