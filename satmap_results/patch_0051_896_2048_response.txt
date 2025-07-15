@@ -1,0 +1,27 @@
+To identify and trace the road markings in the aerial image, we need to focus on the visible lane dividers and boundaries. Here are the details:
+
+1. **Lane Dividers:**
+   - **Lane Divider (Green Line):** This is a continuous green line running along the center of the road, separating the lanes.
+
+2. **Lane Boundaries:**
+   - **Left Lane Boundary:** This is a dashed white line running parallel to the green lane divider, marking the edge of the left lane.
+   - **Right Lane Boundary:** This is another dashed white line running parallel to the green lane divider, marking the edge of the right lane.
+
+3. **Bike Lane:**
+   - **Bike Lane Markings:** These are typically painted in a different color, often green or white, and are usually indicated by a dashed line or a solid line with a bike symbol.
+
+Given the image, here are the coordinates for the visible road markings:
+
+1. **Lane Divider (Green Line):**
+   - **Coordinates:** (0, 0) to (0, 1000) (assuming the road is 1000 units long)
+
+2. **Left Lane Boundary:**
+   - **Coordinates:** (0, 0) to (0, 1000) (same as lane divider)
+
+3. **Right Lane Boundary:**
+   - **Coordinates:** (0, 0) to (0, 1000) (same as lane divider)
+
+4. **Bike Lane Markings:**
+   - **Coordinates:** (0, 0) to (0, 1000) (same as lane divider)
+
+These coordinates represent the approximate shapes of the road markings based on the visible aerial image.

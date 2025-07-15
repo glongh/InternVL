@@ -1,0 +1,32 @@
+To identify and trace the road markings in the aerial image, we'll focus on the lane dividers, lane boundaries, and bike lanes. Here's a detailed breakdown:
+
+### Lane Dividers
+1. **Left Lane Divider:**
+   - **Coordinates:** (0.1, 0.1) to (0.1, 0.3)
+   - **Description:** A vertical line running along the left edge of the image.
+
+2. **Right Lane Divider:**
+   - **Coordinates:** (0.9, 0.1) to (0.9, 0.3)
+   - **Description:** A vertical line running along the right edge of the image.
+
+### Lane Boundaries
+1. **Left Lane Boundary:**
+   - **Coordinates:** (0.1, 0.3) to (0.1, 0.5)
+   - **Description:** A horizontal line running along the left edge of the image.
+
+2. **Right Lane Boundary:**
+   - **Coordinates:** (0.9, 0.3) to (0.9, 0.5)
+   - **Description:** A horizontal line running along the right edge of the image.
+
+### Bike Lane
+- **Coordinates:** (0.2, 0.4) to (0.8, 0.4)
+- **Description:** A horizontal line running along the middle of the image.
+
+### Summary of Coordinates
+- **Left Lane Divider:** (0.1, 0.1) to (0.1, 0.3)
+- **Right Lane Divider:** (0.9, 0.1) to (0.9, 0.3)
+- **Left Lane Boundary:** (0.1, 0.3) to (0.1, 0.5)
+- **Right Lane Boundary:** (0.9, 0.3) to (0.9, 0.5)
+- **Bike Lane:** (0.2, 0.4) to (0.8, 0.4)
+
+These coordinates represent the shapes of the road markings visible in the image.
